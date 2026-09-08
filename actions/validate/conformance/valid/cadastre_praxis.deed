@@ -1,0 +1,8 @@
+;; SPDX-FileCopyrightText: © 2026 Jonathan D.A. Jewell (hyperpolymath)
+;; SPDX-License-Identifier: CC-BY-SA-4.0
+(praxis-deed
+  :schema-version "1.0.0"
+  :canonical-name "cadastre"
+  :beholding-chora #u5"estate/chora"
+  (rules
+    (rule :priority 10)))

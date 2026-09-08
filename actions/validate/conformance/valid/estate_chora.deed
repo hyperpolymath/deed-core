@@ -1,0 +1,7 @@
+;; SPDX-FileCopyrightText: © 2026 Jonathan D.A. Jewell (hyperpolymath)
+;; SPDX-License-Identifier: CC-BY-SA-4.0
+(estate-deed
+  :schema-version "1.0.0"
+  :canonical-name "estate"
+  (vocabulary
+    (term :name "chora" :gloss "a place with a role")))

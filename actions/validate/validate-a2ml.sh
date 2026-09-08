@@ -4,7 +4,7 @@
 #
 # validate-a2ml.sh — A2ML manifest validation script
 #
-# Scans for .a2ml files and validates:
+# Scans for .a2ml and .deed files and validates:
 #   1. Identity presence (warning — see below)
 #   2. SPDX-License-Identifier header presence
 #   3. Attestation block structure (if present)
@@ -88,7 +88,7 @@ report_issue() {
 }
 
 # ---------------------------------------------------------------------------
-# Validator: check a single .a2ml file
+# Validator: check a single .a2ml or .deed file
 # ---------------------------------------------------------------------------
 validate_a2ml() {
     local file="$1"
@@ -129,15 +129,27 @@ validate_a2ml() {
     while IFS= read -r line; do
         line_num=$((line_num + 1))
 
-        # Check for identity fields (various A2ML patterns)
+        # Check for identity fields (various A2ML patterns).
+        # The last two clauses are the deed surface (DEED-GRAMMAR-SPEC
+        # <<validator-change>>): the s-expression document head, and the
+        # leading-colon identity keywords. Per <<identity>> the head symbol is
+        # itself identifying, which is what lets ATLAS.deed — :registry-version
+        # and legitimately no :canonical-name — pass on its head alone.
         if [[ "$line" =~ ^[[:space:]]*(agent[-_]id|name|project|spec_id)[[:space:]]*= ]] \
            || [[ "$line" =~ ^[[:space:]]*name[[:space:]]*: ]] \
            || [[ "$line" =~ ^\[(metadata|scorecard)\] ]] \
-           || [[ "$line" =~ ^@abstract ]]; then
+           || [[ "$line" =~ ^@abstract ]] \
+           || [[ "$line" =~ ^[[:space:]]*\((estate-deed|repo-deed|estate-atlas-deed|praxis-deed)([[:space:]]|$) ]] \
+           || [[ "$line" =~ ^[[:space:]]*:(canonical-name|estate-authority|agent-id)[[:space:]] ]]; then
             has_identity=true
         fi
-        # Check for version field (either separator)
-        if [[ "$line" =~ ^[[:space:]]*(version|schema_version)[[:space:]]*[=:] ]]; then
+        # Check for version field (either separator). The second clause is the
+        # deed keyword form: `:schema-version "1.0.0"` — leading colon and a
+        # hyphen, so the first clause (which spells it schema_version with no
+        # colon) never matched it. :registry-version is a distinct field,
+        # optional on the atlas.
+        if [[ "$line" =~ ^[[:space:]]*(version|schema_version)[[:space:]]*[=:] ]] \
+           || [[ "$line" =~ ^[[:space:]]*:(schema-version|registry-version)[[:space:]] ]]; then
             has_version=true
         fi
         # Template placeholder marker ({{PROJECT_NAME}}, {{VERSION}}, …)
@@ -230,18 +242,18 @@ validate_a2ml() {
 }
 
 # ---------------------------------------------------------------------------
-# Main: discover and validate .a2ml files
+# Main: discover and validate .a2ml and .deed files
 # ---------------------------------------------------------------------------
 
 echo "::group::A2ML Manifest Validation"
-echo "Scanning ${SCAN_PATH} for .a2ml files..."
+echo "Scanning ${SCAN_PATH} for .a2ml and .deed files..."
 echo ""
 
-# Find all .a2ml files, excluding .git directory
-mapfile -t a2ml_files < <(find "$SCAN_PATH" -name '*.a2ml' -not -path '*/.git/*' -type f | sort)
+# Find all .a2ml and .deed files, excluding .git directory
+mapfile -t a2ml_files < <(find "$SCAN_PATH" \( -name '*.a2ml' -o -name '*.deed' \) -not -path '*/.git/*' -type f | sort)
 
 if [[ ${#a2ml_files[@]} -eq 0 ]]; then
-    echo "::notice::No .a2ml files found in ${SCAN_PATH}"
+    echo "::notice::No .a2ml or .deed files found in ${SCAN_PATH}"
     echo "files_scanned=0" >> "$GITHUB_OUTPUT" 2>/dev/null || true
     echo "errors=0" >> "$GITHUB_OUTPUT" 2>/dev/null || true
     echo "warnings=0" >> "$GITHUB_OUTPUT" 2>/dev/null || true
@@ -249,7 +261,7 @@ if [[ ${#a2ml_files[@]} -eq 0 ]]; then
     exit 0
 fi
 
-echo "Found ${#a2ml_files[@]} .a2ml file(s)"
+echo "Found ${#a2ml_files[@]} .a2ml/.deed file(s)"
 echo ""
 
 for file in "${a2ml_files[@]}"; do

@@ -2,12 +2,36 @@
 = A2ML Record Dialect v1.0.0 Specification
 :version: 1.0.0
 :date: 2026-07-03
-:status: Draft
+:status: SUPERSEDED
+:superseded-by: DEED-GRAMMAR-SPEC v0.1.0
+:superseded-date: 2026-09-08
 :era: v1
 :toc: left
 :toclevels: 3
 :icons: font
 :sectnums:
+
+[WARNING]
+====
+*This document is HISTORY. It is SUPERSEDED by `DEED-GRAMMAR-SPEC.adoc` v0.1.0
+(`hyperpolymath/standards`, `deed/spec/`), 2026-09-08.*
+
+The record dialect specified below — the TOML-family surface of `[section]`
+headers and `key = value` entries — is *NOT part of `.deed`*. The DEED grammar
+has no `key = value` production and no `[section]` production. The only bracket
+is `(`. A file using `=` as a field separator is not a deed.
+
+This document is retained *unaltered below this notice* because it is the
+honest record of a real state of affairs: when it was written, 435 estate files
+did conform to the surface it describes, and it said so plainly — "the surface
+was *used* but never *specified*". What it documented was drift, and
+documenting the drift is how the drift became citable. Measured across all
+35,884 legacy `.a2ml` files, the descriptile family had reached *0.2%*
+conformance to the actual grammar (10 correct against 5,424 TOML-shaped).
+
+*Do not implement from this document.* Implement from the DEED grammar
+specification. Do not cite it as normative for any new work.
+====
 
 [abstract]
 == Abstract

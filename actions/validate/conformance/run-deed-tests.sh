@@ -61,7 +61,7 @@ assert_ann() {
 
 echo "3. invalid deeds — non-strict: every diagnostic, per fixture"
 out="$(INPUT_PATH="$WORK/invalid" bash "$VALIDATOR" 2>&1)"; rc=$?
-grep -q 'Found 5 ' <<<"$out" && ok "discovered 5 deed files" \
+grep -q 'Found 6 ' <<<"$out" && ok "discovered 6 deed files" \
     || fail "discovery: '$(grep -o 'Found [0-9]* [^ ]* file(s)' <<<"$out")' (expected 5)"
 [[ $rc -eq 0 ]] && ok "exit 0 (identity and version are warnings here)" \
     || fail "exit $rc non-strict (expected 0)"
@@ -72,6 +72,9 @@ assert_ann warning 'deed-missing-version\.deed'       "$NO_VERSION"
 assert_ann warning 'deed-registry-version-only\.deed' "$NO_VERSION"
 # A head that is not the FIRST form does not identify the document.
 assert_ann warning 'deed-head-not-first\.deed'        "$NO_IDENTITY"
+# @abstract is a contractile Xfile directive with no deed production. Matched in
+# a .deed it satisfied identity for a document with no ruled head at all.
+assert_ann warning 'deed-abstract-identity\.deed'     "$NO_IDENTITY"
 # The AI-MANIFEST exemption is for .a2ml prose; a .deed is still a deed.
 assert_ann warning 'example-AI-MANIFEST\.deed'        "$NO_IDENTITY"
 assert_ann warning 'example-AI-MANIFEST\.deed'        "$NO_VERSION"
@@ -87,6 +90,7 @@ assert_ann error 'deed-missing-head\.deed'          "$NO_IDENTITY"
 assert_ann error 'deed-missing-version\.deed'       "$NO_VERSION"
 assert_ann error 'deed-registry-version-only\.deed' "$NO_VERSION"
 assert_ann error 'deed-head-not-first\.deed'        "$NO_IDENTITY"
+assert_ann error 'deed-abstract-identity\.deed'     "$NO_IDENTITY"
 assert_ann error 'example-AI-MANIFEST\.deed'        "$NO_VERSION"
 grep -q '::warning' <<<"$out" && fail "::warning survived strict" || ok "no ::warning survives strict"
 

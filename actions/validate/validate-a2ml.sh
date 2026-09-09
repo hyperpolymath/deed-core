@@ -125,6 +125,15 @@ validate_a2ml() {
     local has_version=false
     local has_placeholders=false
     local first_form_seen=false
+    # The legacy identity forms below (TOML-ish `key =`, `name:`, `[metadata]`
+    # sections, and the `@abstract` contractile directive) are A2ML surfaces.
+    # The DEED grammar has NO `=` production, NO `[section]` production and no
+    # `@abstract` directive — its only bracket is `(`. Accepting them for a
+    # .deed let any document satisfy identity without ever presenting a ruled
+    # head, which is a gate bypass of exactly the kind this file already fixes
+    # three of.
+    local is_deed=false
+    [[ "$file" == *.deed ]] && is_deed=true
     line_num=0
 
     while IFS= read -r line; do
@@ -136,11 +145,16 @@ validate_a2ml() {
         # leading-colon identity keywords. Per <<identity>> the head symbol is
         # itself identifying, which is what lets ATLAS.deed — :registry-version
         # and legitimately no :canonical-name — pass on its head alone.
-        if [[ "$line" =~ ^[[:space:]]*(agent[-_]id|name|project|spec_id)[[:space:]]*= ]] \
-           || [[ "$line" =~ ^[[:space:]]*name[[:space:]]*: ]] \
-           || [[ "$line" =~ ^\[(metadata|scorecard)\] ]] \
-           || [[ "$line" =~ ^@abstract ]] \
-           || [[ "$line" =~ ^[[:space:]]*:(canonical-name|estate-authority|agent-id)[[:space:]] ]]; then
+        # Deed surface: legitimate for .deed AND .a2ml.
+        if [[ "$line" =~ ^[[:space:]]*:(canonical-name|estate-authority|agent-id)[[:space:]] ]]; then
+            has_identity=true
+        fi
+        # Legacy A2ML surfaces: never identifying for a .deed (see is_deed above).
+        if [[ "$is_deed" == "false" ]] \
+           && { [[ "$line" =~ ^[[:space:]]*(agent[-_]id|name|project|spec_id)[[:space:]]*= ]] \
+             || [[ "$line" =~ ^[[:space:]]*name[[:space:]]*: ]] \
+             || [[ "$line" =~ ^\[(metadata|scorecard)\] ]] \
+             || [[ "$line" =~ ^@abstract ]]; }; then
             has_identity=true
         fi
         # The document head identifies only where the grammar puts it: as the
@@ -193,8 +207,17 @@ validate_a2ml() {
     done
 
     if [[ "$has_identity" == "false" && "$identity_exempt" == "false" ]]; then
-        report_issue "warning" "$file" 1 \
-            "No identity found (agent-id/name/project/spec_id field, [metadata] or [scorecard] section, or @abstract directive)"
+        # Name the forms that are actually valid FOR THIS SURFACE. The generic
+        # message listed [metadata] and @abstract, which are A2ML-only: told to
+        # a deed author (human or bot) it invites them to invent a form the
+        # grammar does not have, and an invented form is worse than no message.
+        if [[ "$is_deed" == "true" ]]; then
+            report_issue "warning" "$file" 1 \
+                "No identity found (deed: the first form must head with (estate-deed, (repo-deed, (estate-atlas-deed or (praxis-deed, or the document must carry a :canonical-name, :estate-authority or :agent-id field)"
+        else
+            report_issue "warning" "$file" 1 \
+                "No identity found (agent-id/name/project/spec_id field, [metadata] or [scorecard] section, or @abstract directive)"
+        fi
     fi
 
     if [[ "$has_version" == "false" && "$identity_exempt" == "false" ]]; then

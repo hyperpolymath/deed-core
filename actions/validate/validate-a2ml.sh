@@ -124,6 +124,7 @@ validate_a2ml() {
     local has_identity=false
     local has_version=false
     local has_placeholders=false
+    local first_form_seen=false
     line_num=0
 
     while IFS= read -r line; do
@@ -139,17 +140,29 @@ validate_a2ml() {
            || [[ "$line" =~ ^[[:space:]]*name[[:space:]]*: ]] \
            || [[ "$line" =~ ^\[(metadata|scorecard)\] ]] \
            || [[ "$line" =~ ^@abstract ]] \
-           || [[ "$line" =~ ^[[:space:]]*\((estate-deed|repo-deed|estate-atlas-deed|praxis-deed)([[:space:]]|$) ]] \
            || [[ "$line" =~ ^[[:space:]]*:(canonical-name|estate-authority|agent-id)[[:space:]] ]]; then
             has_identity=true
+        fi
+        # The document head identifies only where the grammar puts it: as the
+        # FIRST form in the file (DEED-GRAMMAR-SPEC <<document-forms>>). Matched
+        # anywhere in the file, a nested or trailing `(estate-deed ...)`
+        # satisfied identity for a document whose actual head was something
+        # else entirely.
+        if [[ "$first_form_seen" == "false" && "$line" =~ ^[[:space:]]*\( ]]; then
+            first_form_seen=true
+            if [[ "$line" =~ ^[[:space:]]*\((estate-deed|repo-deed|estate-atlas-deed|praxis-deed)([[:space:]]|$) ]]; then
+                has_identity=true
+            fi
         fi
         # Check for version field (either separator). The second clause is the
         # deed keyword form: `:schema-version "1.0.0"` — leading colon and a
         # hyphen, so the first clause (which spells it schema_version with no
-        # colon) never matched it. :registry-version is a distinct field,
-        # optional on the atlas.
+        # colon) never matched it. :registry-version is a distinct, OPTIONAL
+        # atlas field and never satisfies the version requirement, which
+        # <<version-field>> makes REQUIRED on all four heads. Accepting it let a
+        # registry-only atlas head pass carrying no schema version at all.
         if [[ "$line" =~ ^[[:space:]]*(version|schema_version)[[:space:]]*[=:] ]] \
-           || [[ "$line" =~ ^[[:space:]]*:(schema-version|registry-version)[[:space:]] ]]; then
+           || [[ "$line" =~ ^[[:space:]]*:schema-version[[:space:]] ]]; then
             has_version=true
         fi
         # Template placeholder marker ({{PROJECT_NAME}}, {{VERSION}}, …)
@@ -163,7 +176,7 @@ validate_a2ml() {
     basename="$(basename "$file")"
     local identity_exempt=false
     # AI manifests: markdown prose (0-AI-MANIFEST.a2ml, AI.a2ml, …)
-    if [[ "$basename" == *"AI-MANIFEST"* || "$basename" == "AI.a2ml" ]]; then
+    if [[ "$basename" == *"AI-MANIFEST"*.a2ml || "$basename" == "AI.a2ml" ]]; then
         identity_exempt=true
     fi
     # Templates/scaffolds

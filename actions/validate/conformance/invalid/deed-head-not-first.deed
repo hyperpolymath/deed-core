@@ -1,0 +1,8 @@
+;; SPDX-FileCopyrightText: © 2026 Jonathan D.A. Jewell (hyperpolymath)
+;; SPDX-License-Identifier: MPL-2.0
+
+(some-other-form
+  :x "y")
+
+(estate-deed
+  :schema-version "1.0.0")

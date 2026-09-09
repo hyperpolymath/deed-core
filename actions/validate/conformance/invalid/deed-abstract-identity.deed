@@ -1,0 +1,8 @@
+;; SPDX-License-Identifier: MPL-2.0
+;; Negative fixture: @abstract is a contractile Xfile directive, not a deed
+;; identity form. The head here is NOT one of the four ruled heads, so this
+;; document must be reported as identity-less even though @abstract appears.
+(not-a-ruled-head
+  :schema-version "1.0.0")
+
+@abstract "this is not a deed identity"

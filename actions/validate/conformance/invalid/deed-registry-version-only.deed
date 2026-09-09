@@ -1,0 +1,5 @@
+;; SPDX-FileCopyrightText: © 2026 Jonathan D.A. Jewell (hyperpolymath)
+;; SPDX-License-Identifier: MPL-2.0
+
+(estate-atlas-deed
+  :registry-version "3")

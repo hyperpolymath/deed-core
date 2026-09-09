@@ -1,0 +1,44 @@
+= Deed Conformance Fixtures
+
+// SPDX-License-Identifier: MPL-2.0
+
+Behavioural fixtures for `.deed` support in link:../validate-a2ml.sh[validate-a2ml.sh].
+
+== Why these exist
+
+The gap they guard was invisible to every source-level survey. The discovery
+glob matched only `'*.a2ml'`, so `.deed` files were never opened at all: the
+validator reported no errors and exited 0 having validated nothing. String
+presence of a regex is not behavioural acceptance — only running it settles it.
+
+link:run-deed-tests.sh[run-deed-tests.sh] therefore asserts on the discovery
+COUNT as well as the exit code, because `exit 0` is exactly what the defect
+produced.
+
+== Layout
+
+* `valid/` — one fixture per ruled deed head (DEED-GRAMMAR-SPEC
+  `<<document-forms>>`): `estate-deed`, `repo-deed`, `praxis-deed`,
+  `estate-atlas-deed`. All four must pass, strict and non-strict.
++
+`ATLAS.deed` carries `:registry-version` and deliberately no
+`:canonical-name`: per `<<identity>>` the head symbol itself satisfies the
+structural half of identity, so the atlas form must pass on its head alone.
+
+* `invalid/` — `deed-missing-head.deed` (no ruled head and no identity keyword)
+  and `deed-missing-version.deed` (no `:schema-version`). Both are *deliberate*
+  negatives; a repo-wide scan will report them, which is the intended behaviour.
+
+== Severity
+
+This fork treats identity as a lint *warning* (see the script header on
+standards#435), where `a2ml-ecosystem/validate-action` treats it as an error.
+The tests here assert that a problem is *flagged*, not at which severity, so
+they hold under either policy. Reconciling the two forks is a separate matter.
+
+== Run
+
+[source,sh]
+----
+bash actions/validate/conformance/run-deed-tests.sh
+----

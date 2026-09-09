@@ -4,7 +4,7 @@
 #
 # validate-a2ml.sh — A2ML manifest validation script
 #
-# Scans for .a2ml files and validates:
+# Scans for .a2ml and .deed files and validates:
 #   1. Identity presence (warning — see below)
 #   2. SPDX-License-Identifier header presence
 #   3. Attestation block structure (if present)
@@ -88,7 +88,7 @@ report_issue() {
 }
 
 # ---------------------------------------------------------------------------
-# Validator: check a single .a2ml file
+# Validator: check a single .a2ml or .deed file
 # ---------------------------------------------------------------------------
 validate_a2ml() {
     local file="$1"
@@ -124,20 +124,59 @@ validate_a2ml() {
     local has_identity=false
     local has_version=false
     local has_placeholders=false
+    local first_form_seen=false
+    # The legacy identity forms below (TOML-ish `key =`, `name:`, `[metadata]`
+    # sections, and the `@abstract` contractile directive) are A2ML surfaces.
+    # The DEED grammar has NO `=` production, NO `[section]` production and no
+    # `@abstract` directive — its only bracket is `(`. Accepting them for a
+    # .deed let any document satisfy identity without ever presenting a ruled
+    # head, which is a gate bypass of exactly the kind this file already fixes
+    # three of.
+    local is_deed=false
+    [[ "$file" == *.deed ]] && is_deed=true
     line_num=0
 
     while IFS= read -r line; do
         line_num=$((line_num + 1))
 
-        # Check for identity fields (various A2ML patterns)
-        if [[ "$line" =~ ^[[:space:]]*(agent[-_]id|name|project|spec_id)[[:space:]]*= ]] \
-           || [[ "$line" =~ ^[[:space:]]*name[[:space:]]*: ]] \
-           || [[ "$line" =~ ^\[(metadata|scorecard)\] ]] \
-           || [[ "$line" =~ ^@abstract ]]; then
+        # Check for identity fields (various A2ML patterns).
+        # The last two clauses are the deed surface (DEED-GRAMMAR-SPEC
+        # <<validator-change>>): the s-expression document head, and the
+        # leading-colon identity keywords. Per <<identity>> the head symbol is
+        # itself identifying, which is what lets ATLAS.deed — :registry-version
+        # and legitimately no :canonical-name — pass on its head alone.
+        # Deed surface: legitimate for .deed AND .a2ml.
+        if [[ "$line" =~ ^[[:space:]]*:(canonical-name|estate-authority|agent-id)[[:space:]] ]]; then
             has_identity=true
         fi
-        # Check for version field (either separator)
-        if [[ "$line" =~ ^[[:space:]]*(version|schema_version)[[:space:]]*[=:] ]]; then
+        # Legacy A2ML surfaces: never identifying for a .deed (see is_deed above).
+        if [[ "$is_deed" == "false" ]] \
+           && { [[ "$line" =~ ^[[:space:]]*(agent[-_]id|name|project|spec_id)[[:space:]]*= ]] \
+             || [[ "$line" =~ ^[[:space:]]*name[[:space:]]*: ]] \
+             || [[ "$line" =~ ^\[(metadata|scorecard)\] ]] \
+             || [[ "$line" =~ ^@abstract ]]; }; then
+            has_identity=true
+        fi
+        # The document head identifies only where the grammar puts it: as the
+        # FIRST form in the file (DEED-GRAMMAR-SPEC <<document-forms>>). Matched
+        # anywhere in the file, a nested or trailing `(estate-deed ...)`
+        # satisfied identity for a document whose actual head was something
+        # else entirely.
+        if [[ "$first_form_seen" == "false" && "$line" =~ ^[[:space:]]*\( ]]; then
+            first_form_seen=true
+            if [[ "$line" =~ ^[[:space:]]*\((estate-deed|repo-deed|estate-atlas-deed|praxis-deed)([[:space:]]|$) ]]; then
+                has_identity=true
+            fi
+        fi
+        # Check for version field (either separator). The second clause is the
+        # deed keyword form: `:schema-version "1.0.0"` — leading colon and a
+        # hyphen, so the first clause (which spells it schema_version with no
+        # colon) never matched it. :registry-version is a distinct, OPTIONAL
+        # atlas field and never satisfies the version requirement, which
+        # <<version-field>> makes REQUIRED on all four heads. Accepting it let a
+        # registry-only atlas head pass carrying no schema version at all.
+        if [[ "$line" =~ ^[[:space:]]*(version|schema_version)[[:space:]]*[=:] ]] \
+           || [[ "$line" =~ ^[[:space:]]*:schema-version[[:space:]] ]]; then
             has_version=true
         fi
         # Template placeholder marker ({{PROJECT_NAME}}, {{VERSION}}, …)
@@ -151,7 +190,7 @@ validate_a2ml() {
     basename="$(basename "$file")"
     local identity_exempt=false
     # AI manifests: markdown prose (0-AI-MANIFEST.a2ml, AI.a2ml, …)
-    if [[ "$basename" == *"AI-MANIFEST"* || "$basename" == "AI.a2ml" ]]; then
+    if [[ "$basename" == *"AI-MANIFEST"*.a2ml || "$basename" == "AI.a2ml" ]]; then
         identity_exempt=true
     fi
     # Templates/scaffolds
@@ -168,8 +207,17 @@ validate_a2ml() {
     done
 
     if [[ "$has_identity" == "false" && "$identity_exempt" == "false" ]]; then
-        report_issue "warning" "$file" 1 \
-            "No identity found (agent-id/name/project/spec_id field, [metadata] or [scorecard] section, or @abstract directive)"
+        # Name the forms that are actually valid FOR THIS SURFACE. The generic
+        # message listed [metadata] and @abstract, which are A2ML-only: told to
+        # a deed author (human or bot) it invites them to invent a form the
+        # grammar does not have, and an invented form is worse than no message.
+        if [[ "$is_deed" == "true" ]]; then
+            report_issue "warning" "$file" 1 \
+                "No identity found (deed: the first form must head with (estate-deed, (repo-deed, (estate-atlas-deed or (praxis-deed, or the document must carry a :canonical-name, :estate-authority or :agent-id field)"
+        else
+            report_issue "warning" "$file" 1 \
+                "No identity found (agent-id/name/project/spec_id field, [metadata] or [scorecard] section, or @abstract directive)"
+        fi
     fi
 
     if [[ "$has_version" == "false" && "$identity_exempt" == "false" ]]; then
@@ -230,18 +278,18 @@ validate_a2ml() {
 }
 
 # ---------------------------------------------------------------------------
-# Main: discover and validate .a2ml files
+# Main: discover and validate .a2ml and .deed files
 # ---------------------------------------------------------------------------
 
 echo "::group::A2ML Manifest Validation"
-echo "Scanning ${SCAN_PATH} for .a2ml files..."
+echo "Scanning ${SCAN_PATH} for .a2ml and .deed files..."
 echo ""
 
-# Find all .a2ml files, excluding .git directory
-mapfile -t a2ml_files < <(find "$SCAN_PATH" -name '*.a2ml' -not -path '*/.git/*' -type f | sort)
+# Find all .a2ml and .deed files, excluding .git directory
+mapfile -t a2ml_files < <(find "$SCAN_PATH" \( -name '*.a2ml' -o -name '*.deed' \) -not -path '*/.git/*' -type f | sort)
 
 if [[ ${#a2ml_files[@]} -eq 0 ]]; then
-    echo "::notice::No .a2ml files found in ${SCAN_PATH}"
+    echo "::notice::No .a2ml or .deed files found in ${SCAN_PATH}"
     echo "files_scanned=0" >> "$GITHUB_OUTPUT" 2>/dev/null || true
     echo "errors=0" >> "$GITHUB_OUTPUT" 2>/dev/null || true
     echo "warnings=0" >> "$GITHUB_OUTPUT" 2>/dev/null || true
@@ -249,7 +297,7 @@ if [[ ${#a2ml_files[@]} -eq 0 ]]; then
     exit 0
 fi
 
-echo "Found ${#a2ml_files[@]} .a2ml file(s)"
+echo "Found ${#a2ml_files[@]} .a2ml/.deed file(s)"
 echo ""
 
 for file in "${a2ml_files[@]}"; do

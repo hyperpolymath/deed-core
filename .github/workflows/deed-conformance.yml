@@ -5,7 +5,12 @@
 # it reports on the shell validator independently of the CLI build.
 name: Deed Conformance
 
-permissions: read-all
+# This workflow only reads the tree and runs a bash test script: it does not
+# post statuses, comment, or write to the repository. read-all grants every
+# read scope there is (actions, packages, deployments, security events...);
+# contents: read is the only one actually exercised.
+permissions:
+  contents: read
 
 on:
   push:
@@ -26,5 +31,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+        with:
+          # No step here pushes or otherwise uses the token, and this workflow
+          # runs on pull_request against repository-controlled code, so leaving
+          # the credential in .git/config is exposure with no upside (CWE-522).
+          persist-credentials: false
       - name: Run deed conformance tests
         run: bash actions/validate/conformance/run-deed-tests.sh

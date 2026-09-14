@@ -2,11 +2,28 @@ IANA Media Type Registration: application/vnd.a2ml
 =========================================================
 SPDX-License-Identifier: MPL-2.0
 
-Canonical copy: format-registrations/iana/a2ml-media-type.txt
-This file is a synchronised copy for co-location with the A2ML spec.
+*** NEVER SUBMITTED — SUPERSEDED. DO NOT FILE THIS DOCUMENT. ***
 
-Submission Date: 2026-04-03 (Revision 2)
-Submitted By: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+This registration was drafted but was NEVER submitted to IANA, confirmed by
+the change controller on 2026-09-14.  "application/vnd.a2ml" is therefore an
+UNREGISTERED media type string.  It is not reserved, not allocated, and must
+not be described anywhere as a registered type or as a registered alias.
+
+It is superseded by application/vnd.deed, which is the registration actually
+being filed for this format.  See:
+  https://github.com/hyperpolymath/standards/blob/main/deed/docs/iana/application-vnd.deed-registration.txt
+
+This file is retained only as the historical draft that vnd.deed was derived
+from.  It lives beside the specification it describes; there is no second copy.
+
+"A2ML" expands to "Attestation Markup Language" — RULED 2026-09-14.  Three
+repositories each carried a different expansion (Attested Agent Markup
+Language, Attestation Markup Language, Annotated Markup Language); the
+attestation reading, without "agent", is canonical for every historical
+reference, and the other two are to be corrected wherever they appear.
+
+Prepared (not submitted): 2026-04-03 (Revision 2)
+Prepared By: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 ---
 

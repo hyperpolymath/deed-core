@@ -68,11 +68,6 @@ jobs:
           fi
 
           # --- 3. Delete duplicate format files ---
-          if [ -f "editors/vscode/.github/CONTRIBUTING.md" ] && [ -f ".github/CONTRIBUTING.md" ]; then
-            rm editors/vscode/.github/CONTRIBUTING.md
-            FIXES="$FIXES\n- Deleted duplicate \`editors/vscode/.github/CONTRIBUTING.md\` (keeping root .github guide)"
-            CHANGED=true
-          fi
 
           if [ -f "README.md" ] && [ -f "README.adoc" ]; then
             # Only delete README.md if it's a stub (<5 lines)

@@ -2,7 +2,7 @@
 # rhodibot.yml — Automated RSR compliance enforcement
 #
 # Reads root-hygiene rules and auto-fixes what it can:
-#   - Delete banned files (AI.djot, duplicate ../../../../.github/CONTRIBUTING.md, stale snapshots)
+#   - Delete banned files (AI.djot, stale snapshots)
 #   - Rename misnamed files (AI.a2ml → 0-AI-MANIFEST.a2ml)
 #   - Fix SPDX headers (AGPL → PMPL in dotfiles)
 #   - Create missing required files (SECURITY.md, CONTRIBUTING.md)

@@ -19,7 +19,7 @@ We welcome contributions in many forms:
 
 == Contribution Policies
 
-For detailed rules on branch naming, commit messages, and the PR process, please refer to the machine-readable manual at link:.github/CONTRIBUTING.md[CONTRIBUTING.adoc].
+For detailed rules on branch naming, commit messages, and the PR process, please refer to the machine-readable manual at link:.github/CONTRIBUTING.md[../.github/CONTRIBUTING.md].
 
 == Code of Conduct
 

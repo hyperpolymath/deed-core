@@ -154,7 +154,7 @@ See link:https://github.com/hyperpolymath/contractiles[contractiles documentatio
 
 == Documentation
 
-* link:CONTRIBUTING.adoc[Contributing Guide]
+* link:../../.github/CONTRIBUTING.md[Contributing Guide]
 * link:GOVERNANCE.adoc[Governance Model]
 * link:docs/attribution/MAINTAINERS.adoc[Maintainers & Citations]
 * link:SECURITY.adoc[Security Policy]

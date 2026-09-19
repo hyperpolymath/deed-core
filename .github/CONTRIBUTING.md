@@ -46,7 +46,7 @@ flake (Perimeter 1) └── Justfile \# Task runner (Perimeter 1)
 
     **When reporting**:
 
-    Use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.md) and include:
+    Use the [bug report template](../.github/ISSUE_TEMPLATE/bug_report.md) and include:
 
     - Clear, descriptive title
     - Environment details (OS, versions, toolchain)
@@ -63,7 +63,7 @@ flake (Perimeter 1) └── Justfile \# Task runner (Perimeter 1)
 
     **When suggesting**:
 
-    Use the [feature request template](.github/ISSUE_TEMPLATE/feature_request.md) and include:
+    Use the [feature request template](../.github/ISSUE_TEMPLATE/feature_request.md) and include:
 
     - Problem statement (what pain point does this solve?)
     - Proposed solution

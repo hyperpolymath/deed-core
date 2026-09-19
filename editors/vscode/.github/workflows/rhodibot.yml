@@ -68,9 +68,9 @@ jobs:
           fi
 
           # --- 3. Delete duplicate format files ---
-          if [ -f "CONTRIBUTING.md" ] && [ -f "../../../../.github/CONTRIBUTING.md" ]; then
-            rm ../../../../.github/CONTRIBUTING.md
-            FIXES="$FIXES\n- Deleted duplicate \`../../../../.github/CONTRIBUTING.md\` (keeping .md for GitHub)"
+          if [ -f "editors/vscode/.github/CONTRIBUTING.md" ] && [ -f ".github/CONTRIBUTING.md" ]; then
+            rm editors/vscode/.github/CONTRIBUTING.md
+            FIXES="$FIXES\n- Deleted duplicate \`editors/vscode/.github/CONTRIBUTING.md\` (keeping root .github guide)"
             CHANGED=true
           fi
 

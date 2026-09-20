@@ -16,7 +16,7 @@ permissions:
   security-events: write
 
 jobs:
-  scan:
+  hypatia:
     permissions:
       actions: read
       contents: read
